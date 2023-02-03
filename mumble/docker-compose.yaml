@@ -1,0 +1,14 @@
+services:
+  mumble:
+    build: .
+    image: mumble-server
+    container_name: mumble-server
+    restart: always
+    ports:
+      - 64738:64738/udp
+      - 64738:64738/tcp
+    volumes: 
+      - data:/data
+
+volumes:
+  data:
