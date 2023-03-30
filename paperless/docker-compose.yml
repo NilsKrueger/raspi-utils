@@ -63,6 +63,8 @@ services:
 
       USERMAP_UID: 1000
       USERMAP_GID: 100
+    env_file:
+      - /home/pi/raspi-utils/paperless/paperless.env
 
 volumes:
   data:
