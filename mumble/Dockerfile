@@ -1,7 +1,9 @@
 FROM alpine:latest
 MAINTAINER Nils Krueger <koschiwsf@gmail.com>
 
-RUN apk update && apk add murmur
+RUN apk update && apk add murmur \
+    && mkdir -p /data \
+    && chmod -R a+rw /data
 
 COPY mumble-server.ini /etc/murmur.ini
 
