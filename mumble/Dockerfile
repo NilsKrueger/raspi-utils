@@ -1,5 +1,5 @@
 FROM alpine:latest
-MAINTAINER Nils Krueger <koschiwsf@gmail.com>
+LABEL org.opencontainers.image.authors="koschiwsf@gmail.com"
 
 RUN apk update && apk add murmur \
     && mkdir -p /data \
