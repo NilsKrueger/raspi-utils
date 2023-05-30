@@ -43,10 +43,10 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - /home/pi/paperless/data:/usr/src/paperless/data
-      - /home/pi/paperless/media:/usr/src/paperless/media
-      - /home/pi/paperless/export:/usr/src/paperless/export
-      - /home/pi/paperless/consume:/usr/src/paperless/consume
+      - ~/paperless/data:/usr/src/paperless/data
+      - ~/paperless/media:/usr/src/paperless/media
+      - ~/paperless/export:/usr/src/paperless/export
+      - ~/paperless/consume:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: redis://broker:6379
       PAPERLESS_DBHOST: db
@@ -63,8 +63,6 @@ services:
 
       USERMAP_UID: 1000
       USERMAP_GID: 100
-    env_file:
-      - /home/pi/raspi-utils/paperless/paperless.env
 
 volumes:
   data:
