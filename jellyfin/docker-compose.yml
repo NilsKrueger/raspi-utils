@@ -1,0 +1,18 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+
+    network_mode: 'host'
+    volumes:
+      - ~/jellyfin/config:/config
+      - ~/jellyfin/cache:/config
+      - ~/jellyfin/media:/data/media:ro
+      - /dev/shm:/data/transcode # transcode in RAM
+
+    # Optional - alternative address used for autodiscovery
+    #environment:
+    #  - JELLYFIN_PublishedServerUrl=http://example.com
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
