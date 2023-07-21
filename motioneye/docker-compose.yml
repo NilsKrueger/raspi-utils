@@ -1,0 +1,15 @@
+services:
+  motioneye:
+    image: ccrisan/motioneye:master-armhf
+    container_name: motioneye
+    volumes:
+      - /etc/localtime:/etc/localtime:ro #Timezone Config / Do Not Change
+      - ~/motioneye/config:/etc/motioneye #Config Storage
+      - ~/motioneye/data:/var/lib/motioneye  #File Storage
+    devices:
+      - "/dev/vchiq:/dev/vchiq"
+      - "/dev/video0:/dev/video0"
+    ports:
+      - 8765:8765
+      - 8081:8081
+    restart: always
