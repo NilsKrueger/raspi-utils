@@ -1,0 +1,7 @@
+paths:
+  cam:
+    source: rpiCamera
+    rpiCameraWidth: 1280
+    rpiCameraHeight: 720
+    rpiCameraVFlip: true
+    rpiCameraHFlip: true
