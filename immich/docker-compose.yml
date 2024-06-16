@@ -12,7 +12,6 @@ services:
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-    command: ['start.sh', 'immich']
     volumes:
       - ${ENCODED_VIDEO_LOCATION}:/usr/src/app/upload/encoded-videos
       - ${THUMBNAIL_LOCATION}:/usr/src/app/upload/thumbs
@@ -22,25 +21,6 @@ services:
       - .env
     ports:
       - 2283:3001
-    depends_on:
-      - redis
-      - database
-    restart: always
-
-  immich-microservices:
-    container_name: immich_microservices
-    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-    # extends: # uncomment this section for hardware acceleration - see https://immich.app/docs/features/hardware-transcoding
-    #   file: hwaccel.transcoding.yml
-    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
-    command: ['start.sh', 'microservices']
-    volumes:
-      - ${ENCODED_VIDEO_LOCATION}:/usr/src/app/upload/encoded-videos
-      - ${THUMBNAIL_LOCATION}:/usr/src/app/upload/thumbs
-      - ${UPLOAD_LOCATION}:/usr/src/app/upload
-      - /etc/localtime:/etc/localtime:ro
-    env_file:
-      - .env
     depends_on:
       - redis
       - database
@@ -62,21 +42,29 @@ services:
 
   redis:
     container_name: immich_redis
-    image: registry.hub.docker.com/library/redis:6.2-alpine@sha256:51d6c56749a4243096327e3fb964a48ed92254357108449cb6e23999c37773c5
+    image: docker.io/redis:6.2-alpine@sha256:d6c2911ac51b289db208767581a5d154544f2b2fe4914ea5056443f62dc6e900
+    healthcheck:
+      test: redis-cli ping || exit 1
     restart: always
 
   database:
     container_name: immich_postgres
-    image: registry.hub.docker.com/tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0
+    image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_DB: ${DB_DATABASE_NAME}
+    #  POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
-      #- pgdata:/var/lib/postgresql/data
       - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    # disabled for now, but in case of enabling, follow this to migrate the db to use checksums https://github.com/immich-app/immich/pull/9384#issuecomment-2136069665
+    #healthcheck:
+    #  test: pg_isready --dbname='${DB_DATABASE_NAME}' || exit 1; Chksum="$$(psql --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' --tuples-only --no-align --command='SELECT SUM(checksum_failures) FROM pg_stat_database')"; echo "checksum failure count is $$Chksum"; [ "$$Chksum" = '0' ] || exit 1
+    #  interval: 5m
+    #  start_interval: 30s
+    #  start_period: 5m
+    #command: ["postgres", "-c" ,"shared_preload_libraries=vectors.so", "-c", 'search_path="$$user", public, vectors', "-c", "logging_collector=on", "-c", "max_wal_size=2GB", "-c", "shared_buffers=512MB", "-c", "wal_compression=on"]
     restart: always
 
 volumes:
-  pgdata:
   model-cache:
