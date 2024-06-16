@@ -29,7 +29,7 @@ services:
       POSTGRES_PASSWORD: paperless
 
   webserver:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.9.0
     restart: unless-stopped
     depends_on:
       - db
@@ -43,14 +43,14 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - ~/paperless/data:/usr/src/paperless/data
-      - ~/paperless/media:/usr/src/paperless/media
-      - ~/paperless/export:/usr/src/paperless/export
-      - ~/paperless/consume:/usr/src/paperless/consume
+      - $HOME/paperless/data:/usr/src/paperless/data
+      - /mnt/murray-paperless/media:/usr/src/paperless/media
+      - $HOME/paperless/export:/usr/src/paperless/export
+      - /mnt/murray-paperless/consume:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: redis://broker:6379
       PAPERLESS_DBHOST: db
-      #PAPERLESS_SECRET_KEY: ${SECRET_KEY} # if exposed to the internet
+      PAPERLESS_SECRET_KEY: ${SECRET_KEY} # if exposed to the internet
 
       PAPERLESS_ADMIN_MAIL: ${ADMIN_MAIL}
       PAPERLESS_ADMIN_USER: ${ADMIN_USER}
@@ -60,9 +60,13 @@ services:
       PAPERLESS_OCR_MODE: skip_noarchive
       PAPERLESS_OCR_CLEAN: clean-final
       PAPERLESS_OCR_DESKEW: true
+      # file names are maintained before processed by paperless
+      PAPERLESS_FILENAME_FORMAT: "{original_name}"
+      # since we mount a smb folder watching does not work, we have force polling documents
+      PAPERLESS_CONSUMER_POLLING: 60
 
-      USERMAP_UID: 1000
-      USERMAP_GID: 100
+      USERMAP_UID: 1000 # orangepi
+      USERMAP_GID: 1001 # paperless
 
 volumes:
   data:

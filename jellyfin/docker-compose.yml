@@ -3,16 +3,22 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
+    privileged: true
 
     network_mode: 'host'
     volumes:
-      - ~/jellyfin/config:/config
-      - ~/jellyfin/cache:/config
-      - ~/jellyfin/media:/data/media:ro
-      - /dev/shm:/data/transcode # transcode in RAM
+      - $HOME/jellyfin/config:/config
+      - $HOME/jellyfin/cache:/cache
+      - /mnt/morpheus/media:/data/media:ro
 
-    # Optional - alternative address used for autodiscovery
-    #environment:
-    #  - JELLYFIN_PublishedServerUrl=http://example.com
+    group_add:
+      - "44"
+      - "105"
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/dma_heap:/dev/dma_heap
+      - /dev/mali0:/dev/mali0
+      - /dev/rga:/dev/rga
+      - /dev/mpp_service:/dev/mpp_service
     extra_hosts:
       - "host.docker.internal:host-gateway"
