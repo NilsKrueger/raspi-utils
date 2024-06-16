@@ -1,0 +1,51 @@
+services:
+  iobroker:
+    container_name: iobroker
+    image: buanet/iobroker
+    hostname: iobroker
+    restart: always
+    environment:
+      - TZ=Europe/Berlin
+    ports:
+      - "8081:8081"
+    volumes:
+      - $HOME/iobroker-data:/opt/iobroker
+
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mqtt
+    ports:
+      - "1883:1883" #default mqtt port
+      - "9001:9001" #default mqtt port for websockets
+    volumes:
+      - $HOME/mqtt/mqtt-config:/mosquitto/config
+      - $HOME/mqtt/mqtt-data:/mosquitto/data
+      - $HOME/mqtt/mqtt-log:/mosquitto/log
+    restart: unless-stopped
+
+  node-red:
+    image: nodered/node-red:latest
+    container_name: node-red
+    environment:
+      - TZ=Europe/Berlin
+    ports:
+      - "1880:1880"
+    volumes:
+      - $HOME/node-red:/data
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    user: 1000:1000
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    #environment:
+    #  GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel"
+
+volumes:
+  grafana-data:
