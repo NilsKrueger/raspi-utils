@@ -1,2 +1,4 @@
 portainer/data/*
 *.env
+uptime-kuma/data
+uptime-kuma/signal

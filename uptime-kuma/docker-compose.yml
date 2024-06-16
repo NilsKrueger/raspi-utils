@@ -1,10 +1,30 @@
 services:
   uptime-kuma:
-    image: louislam/uptime-kuma:latest
+    image: louislam/uptime-kuma:1.23.13
     container_name: uptime-kuma
+    restart: unless-stopped
+    networks:
+      - shared-uptime
+    ports:
+      - "3001:3001"
     volumes:
       - ./data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock
+  signal:
+    image: bbernhard/signal-cli-rest-api:0.83
+    container_name: signal-api
+    restart: unless-stopped
+    networks:
+      - shared-uptime
     ports:
-      - 3001:3001
-    restart: always
+      - "8081:8080"
+    environment:
+      - MODE=native
+      - AUTO_RECEIVE_SCHEDULE=0 22 * * *
+    volumes:
+      - ./signal:/home/.local/share/signal-cli
+
+networks:
+  shared-uptime:
+    name: shared-uptime
+    driver: bridge

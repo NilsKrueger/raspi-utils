@@ -1,0 +1,37 @@
+services:
+  app:
+    image: jc21/nginx-proxy-manager:2.11.2
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - $HOME/nginx-proxy-manager/data:/data
+      - $HOME/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    environment:
+      DISABLE_IPV6: 'true'
+        #  duckdns:
+        #    image: lscr.io/linuxserver/duckdns:latest
+        #    container_name: duckdns
+        #    environment:
+        #      - SUBDOMAINS=n115
+        #      - TOKEN=b28c191d-06bf-49ec-beca-8a84de37d1cb
+        #      - UPDATE_IP=ipv4 #optional
+        #      - LOG_FILE=false #optional
+        #    volumes:
+        #      - $HOME/nginx-proxy-manager/duckdns/config:/config
+        #    restart: unless-stopped
+  cloudflare-ddns:
+    image: timothyjmiller/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    security_opt:
+      - no-new-privileges:true
+    network_mode: 'host'
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - $HOME/cloudflare-ddns/config.json:/config.json
+    restart: unless-stopped

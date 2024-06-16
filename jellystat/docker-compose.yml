@@ -1,0 +1,23 @@
+services:
+  jellystat-db:
+    image: postgres:15.2
+    environment:
+      POSTGRES_DB: 'jfstat'
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4HURynkc4@c3
+    volumes:
+      - $HOME/jellystat/data:/var/lib/postgresql/data # Mounting the volume
+  jellystat:
+    image: cyfershepard/jellystat:1.1.0
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4HURynkc4@c3
+      POSTGRES_IP: jellystat-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: '70b159be598a49b3a7fc2cdd067e2117'
+    ports:
+      - "3002:3000" #Server Port
+    volumes:
+      - $HOME/jellystat/backup-data:/app/backend/backup-data # Mounting the volume
+    depends_on:
+      - jellystat-db
