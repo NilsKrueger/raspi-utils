@@ -1,9 +1,12 @@
 services:
   jellyfin:
-    image: jellyfin/jellyfin:latest
+    image: jellyfin/jellyfin:10.9.9
     container_name: jellyfin
     restart: unless-stopped
-    privileged: true
+    #privileged: true
+    security_opt: # enables full access to /sys and /proc, still far better than privileged: true
+      - systempaths=unconfined
+      - apparmor=unconfined
 
     network_mode: 'host'
     volumes:
