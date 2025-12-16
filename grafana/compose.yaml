@@ -1,0 +1,91 @@
+---
+services:
+  grafana:
+    image: grafana/grafana-oss:11.5.2
+    container_name: grafana
+    ports:
+      - 3000:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: ${SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - ./config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - grafana-data:/var/lib/grafana
+    labels:
+      - alloy.logs.enable=true
+    #  - traefik.enable=true
+    #  # -- Traefik Services
+    #  - traefik.http.services.grafana.loadBalancer.server.port=3000
+    #  # -- Traefik Routers
+    #  - traefik.http.routers.grafana.entrypoints=web,websecure
+    #  - traefik.http.routers.grafana.rule=Host(`grafana-observer`)
+    #  - traefik.http.routers.grafana.tls=true
+    #  - traefik.http.routers.grafana.tls.certresolver=cloudflare
+    #  - traefik.http.routers.grafana.service=grafana@observer
+    restart: unless-stopped
+
+  loki:
+    container_name: loki
+    image: grafana/loki:3.4.2
+    ports:
+      - 3100:3100
+    volumes:
+      - ./config/config-loki.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/config.yaml
+    labels:
+      - "alloy.logs.enable=true"
+    #   - traefik.enable=true
+    #   # -- Traefik Services
+    #   - traefik.http.services.loki.loadbalancer.server.port=3100
+    #   # -- Traefik Routers
+    #   - traefik.http.routers.loki.entrypoints=websecure
+    #   - traefik.http.routers.loki.rule=Host(`loki-observer`)
+    #   - traefik.http.routers.loki.tls=true
+    #   - traefik.http.routers.loki.tls.certresolver=cloudflare
+    #   - traefik.http.routers.loki.service=loki@observer
+    restart: unless-stopped
+   
+  alloy:
+    container_name: alloy
+    image: grafana/alloy
+    ports:
+      - 12345:12345
+    environment:
+      - HOSTNAME=${HOSTNAME}
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+      - ./config/config.alloy:/etc/alloy/config.alloy:ro
+    command: >
+      run
+      --server.http.listen-addr=0.0.0.0:12345
+      --storage.path=/var/lib/alloy/data
+      /etc/alloy
+    labels:
+      - "alloy.logs.enable=true"
+    #  - traefik.enable=true
+    #  # -- Traefik Services
+    #  - traefik.http.services.alloy.loadBalancer.server.port=12345
+    #  # -- Traefik Routers
+    #  - traefik.http.routers.alloy.entrypoints=web,websecure
+    #  - traefik.http.routers.alloy.rule=Host(`alloy-observer`)
+    #  - traefik.http.routers.alloy.tls=true
+    #  - traefik.http.routers.alloy.tls.certresolver=cloudflare
+    #  - traefik.http.routers.alloy.service=alloy@observer
+    restart: unless-stopped
+
+#  promtail:
+#    container_name: promtail
+#    image: grafana/promtail:latest
+#   command: -config.file=/etc/promtail/config.yaml
+#    volumes:
+#      - ./config/config-promtail.yaml:/etc/promtail/config.yaml:ro
+#      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+#      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  alloy-data: {}
+  grafana-data: {}
+  loki-data: {}

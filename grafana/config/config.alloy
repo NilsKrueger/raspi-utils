@@ -1,0 +1,91 @@
+local.file_match "local_files" {
+  path_targets = [{"__path__" = "/var/log/*/*.log"}]
+  sync_period = "5s"
+}
+
+loki.source.file "local_log_scrape" {
+  targets    = local.file_match.local_files.targets
+  forward_to = [loki.write.grafana_loki.receiver]
+  tail_from_end = true
+}
+
+// -------------------------------------------- Receivers/Discovery
+discovery.docker "docker_logs" {
+  host = "unix:///var/run/docker.sock"
+
+  filter{
+    name = "label"
+    values = ["alloy.logs.enable=true"]
+  }
+}
+
+// -------------------------------------------- Sources
+loki.source.docker "docker_logs" {
+  host = "unix:///var/run/docker.sock"
+  targets = discovery.docker.docker_logs.targets
+  labels = {
+    "node_name" = sys.env("HOSTNAME"),
+    //"app" = "docker",
+  }
+  relabel_rules = loki.relabel.docker_logs.rules
+  forward_to = [loki.write.grafana_loki.receiver]
+}
+
+// Each target includes the following labels:
+//     __meta_docker_container_id: ID of the container.
+//     __meta_docker_container_name: Name of the container.
+//     __meta_docker_container_network_mode: Network mode of the container.
+//     __meta_docker_container_label_<labelname>: Each label from the container.
+//     __meta_docker_network_id: ID of the Docker network the container is in.
+//     __meta_docker_network_name: Name of the Docker network the container is in.
+//     __meta_docker_network_ingress: Set to true if the Docker network is an ingress network.
+//     __meta_docker_network_internal: Set to true if the Docker network is an internal network.
+//     __meta_docker_network_label_<labelname>: Each label from the network the container is in.
+//     __meta_docker_network_scope: The scope of the network the container is in.
+//     __meta_docker_network_ip: The IP of the container in the network.
+//     __meta_docker_port_private: The private port on the container.
+//     __meta_docker_port_public: The publicly exposed port from the container, if a port mapping exists.
+//     __meta_docker_port_public_ip: The public IP of the container, if a port mapping exists.
+
+loki.relabel "docker_logs" {
+  forward_to = []
+
+  //rule {
+  //  source_labels = ["__meta_docker_container_id"]
+  //  target_label = "container"
+  //}
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = "/(.*)"
+    target_label = "app"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label = "stream"
+  }
+  rule {
+    source_labels = ["__log__"]
+    regex = ".*level=([a-zA-Z]+).*"
+    target_label = "level"
+  }
+  rule {
+    source_labels = ["level"]
+    target_label = "level"
+  }
+}
+
+loki.source.docker "observer" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.docker_logs.targets
+  forward_to = [loki.write.grafana_loki.receiver]
+  relabel_rules = loki.relabel.docker_logs.rules
+  refresh_interval = "5s"
+}
+
+
+// -------------------------------------------- Exporters
+loki.write "grafana_loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
